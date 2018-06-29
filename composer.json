@@ -1,0 +1,15 @@
+{
+    "name": "root/php-swagger",
+    "authors": [
+        {
+            "name": "kz",
+            "email": "m13715194169_1@163.com"
+        }
+    ],
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "pswg\\": "src"
+        }
+    }
+}
