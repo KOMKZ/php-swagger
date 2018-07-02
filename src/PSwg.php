@@ -6,7 +6,7 @@ namespace pswg;
  */
 class PSwg
 {
-	public function saveFromParser(PSwgParser $paser){
+	public function saveFromParser(PSwgParser $parser){
 		$parser->parse();
 
 	}
