@@ -61,7 +61,14 @@ class PSwgParser
 				return [$value, true];
 			},
 			'api' => function($value){
-				return [$value, false];
+				$body = [
+					'method' => '',
+					'path' => '',
+					'tag' => '',
+					'description' => ''
+				];
+				list($body['method'], $body['path'], $body['tag'], $body['description']) = explode(',', $value);
+				return [$body, false];
 			}
 		];
 	}
@@ -77,25 +84,38 @@ class PSwgParser
 			$props = static::getValidProps();
 			$valParsers = static::getValueParser();
 			$docBegin = false;
+			$propBegin = false;
+			$propName = "";
+			$propValue = [];
+			$propMoreValue = [];
+			$valParser = null;
+			$end = true;
 		    while (($buffer = fgets($handle, 4096)) !== false) {
 		      	if(preg_match("/\s*\/\*\*\s*\n/", $buffer)){
 					$docBegin = true;
 				}
 				//解析一行
 				// @swagger 2.0.0
-				$propBegin = false;
-				$propName = "";
-				$propValue = [];
-				$valParser = null;
 				if($docBegin){
 					if(preg_match("/@(?<prop>[a-zA-Z\-\_]+)\s+(?<value>.*)/", $buffer, $matches)){
 						if(!in_array($matches['prop'], $names)){
 							throw new \Exception(sprintf("error:%s %s", $lineNum, $buffer));
 						}
+						if(!$end){
+							$propValue['more'] = $propMoreValue;
+							$docBlock[] = [[
+								'prop' => $propName,
+								'value' => $propValue
+							], $lineNum];
+							$propBegin = false;
+							$propName = "";
+							$propValue = [];
+							$end = true;
+							$propMoreValue = [];
+						}
 						$propName = $matches['prop'];
 						$propValue = $matches['value'];
 						$propBegin = true;
-
 						$valParser = $valParsers[$props[$propName]['parser']];
 						list($propValue, $end) = $valParser($propValue);
 						if($end){
@@ -106,9 +126,11 @@ class PSwgParser
 							$propBegin = false;
 							$propName = "";
 							$propValue = [];
+							$end = true;
+							$propMoreValue = [];
 						}
-					}else{
-						echo $buffer . "\n";
+					}elseif($propBegin){
+						$propMoreValue[] = $buffer;
 					}
 				}
 				if(preg_match("/\s*\*\/\s*\n/", $buffer)){
@@ -119,7 +141,7 @@ class PSwgParser
 				}
 				$lineNum++;
 		    }
-			print_r($docs);
+			console($docs);
 		    if (!feof($handle)) {
 		       	throw new \Exception("Error: unexpected fgets() fail\n");
 		    }
