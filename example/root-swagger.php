@@ -47,7 +47,7 @@
 
   /**
    * @def #global_res
-   * - code integer,提交状态,enums(u_type)
+   * - code integer,enums(u_type),提交状态
    * - data object,返回的数据结构
    * - message string,错误信息
    *
@@ -57,7 +57,7 @@
    *
    * @def #user_item_object
    * - u_id integer,用户id
-   * - u_type string,用户类型,enums(u_type)
+   * - u_type string,enums(u_type),用户类型
    * - u_info object#u_info_object,用户信息对象
    * - u_skills array#u_skill_object,用户技能对象列表
    *
@@ -80,10 +80,9 @@
    * - u_skill_level required,not_validate,string,skip,not_def,not_enums,用户地址
    *
    * @validate #u_name/put
-   * - ["string", "min" => 1, "max" => 20]
-   * - ["unique", "targetClass" => common\models\user\ar\User::className(), "targetAttribute" => "u_name"]
+   * - {"type":"string", "min":1, "max":2}
+   *
    * @validate #u_name/default
-   * - ['required']
-   * - ["string", "min" => 1, "max" => 20]
-   * - ["unique", "targetClass" => common\models\user\ar\User::className(), "targetAttribute" => "u_name"]
+   * - {"type":"unique","targetClass":"common\\models\\user\\ar\\User","targetAttribute":"u_name"}
+   *
    */
