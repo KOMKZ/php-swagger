@@ -5,10 +5,12 @@
  * @description User API
  * @version 0.1.9
  * @host localhost:8064
- * @base_path /
+ * @base_path
  * @schemes http
  * @consumes application/json
  * @produces application/json
+ * @contact_url http://www.baidu.com
+ * @contact_name kitral
  */
 
 /**
@@ -52,8 +54,8 @@
    * - message string,错误信息
    *
    * @def #user_list_object
-   * total_count integer,总数量
-   * items array#user_item_object,用户列表
+   * - total_count integer,总数量
+   * - items array#user_item_object,用户列表
    *
    * @def #user_item_object
    * - u_id integer,用户id

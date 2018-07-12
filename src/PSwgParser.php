@@ -14,45 +14,67 @@ class PSwgParser
 		return [
 		   'swagger' => [
 			   'parser' => 'single',
+			   'belong' => 'root'
 		   ],
 		   'title' => [
 			   'parser' => 'single',
+			   'belong' => 'root'
 		   ],
 		   'description' => [
 			   'parser' => 'single',
+			   'belong' => 'root'
 		   ],
 		   'version' => [
 			   'parser' => 'single',
+			   'belong' => 'root'
 		   ],
 		   'host' => [
 			   'parser' => 'single',
+			   'belong' => 'root'
 		   ],
 		   'base_path' => [
 			   'parser' => 'single',
+			   'belong' => 'root'
 		   ],
 		   'schemes' => [
 			   'parser' => 'single',
+			   'belong' => 'root'
 		   ],
 		   'consumes' => [
 			   'parser' => 'single',
+			   'belong' => 'root'
 		   ],
 		   'produces' => [
 			   'parser' => 'single',
+			   'belong' => 'root'
+		   ],
+		   'contact_url' => [
+			   'parser' => 'single',
+			   'belong' => 'root'
+		   ],
+		   'contact_name' => [
+			   'parser' => 'single',
+			   'belong' => 'root'
 		   ],
 		   'api' => [
 			   'parser' => 'api',
+			   'belong' => 'apis'
 		   ],
 		   'return' => [
 			   'parser' => 'def',
+			   'belong' => 'apis',
 		   ],
 		   'def' => [
 			   'parser' => 'def',
+			   'belong' => 'defs'
 		   ],
 		   'param' => [
 			   'parser' => 'def',
+			   'belong' => 'params'
 		   ],
 		   'validate' => [
 			   'parser' => 'validate',
+			   'belong' => 'validators'
 		   ],
 		];
 	}
@@ -163,7 +185,13 @@ class PSwgParser
 		}
 	}
 
-	protected $docs = [];
+	protected $docs = [
+		'root' => [],
+		'apis' => [],
+		'defs' => [],
+		'params' => [],
+		'validators' => [],
+	];
 	protected $docBegin = false;
 	protected $propBegin = false;
 	protected $propName = '';
@@ -171,12 +199,25 @@ class PSwgParser
 	protected $propMoreValue = [];
 	protected $end = true;
 	protected $lineNum = 1;
+	protected $docBlock = [
+		'root' => [],
+		'apis' => [],
+		'defs' => [],
+		'params' => [],
+		'validators' => [],
+	];
 
 	protected function pushDocProp(){
+		if(!$this->propName){
+			return 0;
+		}
 		if($this->propMoreValue){
 			$this->propValue['more'] = $this->propMoreValue;
 		}
-		$this->docBlock[] = [[
+		$props = static::getValidProps();
+		$prop = $props[$this->propName];
+		$belong = $prop['belong'];
+		$this->docBlock[$belong][] = [[
 			'name' => $this->propName,
 			'value' => $this->propValue
 		], $this->lineNum];
@@ -190,12 +231,23 @@ class PSwgParser
 		$this->propMoreValue = [];
 	}
 	protected function pushDocBlock(){
-		$this->docs[] = $this->docBlock;
+		foreach($this->docBlock as $type => $items){
+			foreach($items as $item){
+				$this->docs[$type][] = $item;
+			}
+		}
+
 		$this->debug("推入一个doc\n\n");
 	}
 	protected function resetDocBlock(){
 		// 置空
-		$this->docBlock = [];
+		$this->docBlock = [
+			'root' => [],
+			'apis' => [],
+			'defs' => [],
+			'params' => [],
+			'validators' => [],
+		];
 		$this->docBegin = false;
 	}
 	public function parse(){
@@ -251,13 +303,71 @@ class PSwgParser
 				}
 				$this->lineNum++;
 		    }
-			console($this->docs);
 		    if (!feof($handle)) {
 		       	throw new \Exception("Error: unexpected fgets() fail\n");
 		    }
 		    fclose($handle);
 		}
 	}
+
+	public function genePhpSwg(){
+		$rootDocs = [];
+		foreach($this->docs['root'] as $item){
+			$itemDoc = $item[0];
+			$rootDocs[$itemDoc['name']] = $itemDoc['value'];
+		}
+		static::buildRoot($rootDocs);
+		$i = 0;
+		while(isset($this->docs['apis'][$i]) && ($apiDoc = $this->docs['apis'][$i])){
+			$apiReturn = $this->docs['apis'][$i+1];
+			static::buildOneApi($apiDoc, $apiReturn);
+			$i += 2;
+		}
+	}
+	public static function buildOneApi($apiDocItem, $apiReturnItem){
+		$apiDoc = $apiDocItem[0];
+		$apiReturn = $apiReturnItem[0];
+		$bodyParams = [];
+		$params = [];
+		foreach($apiDoc['value']['more'] as $param){
+			if($param['path_type'] == 'in_body'){
+				$bodyParams[] = $param;
+			}else{
+				$params[] = $param;
+			}
+		}
+		foreach($params as $param){
+			static::buildOneParameter($param);
+		}
+
+		console($apiDoc);
+
+	}
+	public static function buildOneParameter($param){
+		console($param);
+	}
+	public static function buildRoot($rootDocs){
+		$root = <<<str
+/**
+ *  @SWG\Swagger(
+ *    host="{$rootDocs['host']}",
+ *    schemes={"{$rootDocs['schemes']}"},
+ *    produces={"{$rootDocs['produces']}"},
+ *    consumes={"{$rootDocs['consumes']}"},
+ *    basePath="{$rootDocs['base_path']}",
+ *    @SWG\Info(
+ *      version="{$rootDocs['version']}",
+ *      title="{$rootDocs['title']}",
+ *      description="{$rootDocs['description']}",
+ *      @SWG\Contact(name="{$rootDocs['contact_name']}", url="{$rootDocs['contact_url']}"),
+ *      @SWG\License(name="{$rootDocs['contact_name']}", url="{$rootDocs['contact_url']}")
+ *    )
+ *  )
+ */
+str;
+		return $root;
+	}
+
 	public static function checkIsDocEnd($buffer){
 		return preg_match("/\s*\*\/\s*\n/", $buffer);
 	}
