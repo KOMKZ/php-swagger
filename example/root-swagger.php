@@ -15,34 +15,34 @@
 
 /**
  * @api get,/users,User,获取用户列表接口
- * - u_id optional,not_validate,integer,in_query,not_def,not_enums,用户id
- * - u_type optional,not_validate,string,in_query,common,enums(u_type),用户类型
+ * - u_id optional,not_validate,integer,query,not_def,not_enums,用户id
+ * - u_type optional,not_validate,string,query,common,enums(u_type),用户类型
  * @return #global_res
  * - data object#user_list_object,返回用户列表
  */
 
 /**
  * @api post,/users,User,创建一个用户
- * - u_name required,validate#u_name/default,string,in_body,not_def,not_enums,用户昵称
- * - u_info required,not_validate,object#u_info_params,in_body,not_def,not_enums,用户信息
- * - u_skills required,not_validate,array#u_skill_params,in_body,not_def,not_enums,用户技能列表
+ * - u_name required,validate#u_name/default,string,body,not_def,not_enums,用户昵称
+ * - u_info required,not_validate,object#u_info_params,body,not_def,not_enums,用户信息
+ * - u_skills required,not_validate,array#u_skill_params,body,not_def,not_enums,用户技能列表
  * @return #global_res
  * - data object#user_item_object,用户数据
  */
 
  /**
   * @api put,/users/{id},User,修改一个用户
-  * - id required,not_validate,integer,in_path,not_def,not_enums,用户id
-  * - u_name required,validate#u_name/put,string,in_body,not_def,not_enums,用户昵称
-  * - u_info required,not_validate,object#u_info_params,in_body,not_def,not_enums,用户信息
-  * - u_skills required,not_validate,array#u_skill_params,in_body,not_def,not_enums,用户技能列表
+  * - id required,not_validate,integer,path,not_def,not_enums,用户id
+  * - u_name required,validate#u_name/put,string,body,not_def,not_enums,用户昵称
+  * - u_info required,not_validate,object#u_info_params,body,not_def,not_enums,用户信息
+  * - u_skills required,not_validate,array#u_skill_params,body,not_def,not_enums,用户技能列表
   * @return #global_res
   * - data object#user_item_object,用户数据
   */
 
   /**
    * @api delete,/users/{id},User,修改一个用户
-   * - id required,not_validate,integer,in_path,not_def,not_enums,用户id
+   * - id required,not_validate,integer,path,not_def,not_enums,用户id
    * @return #global_res
    * - data object#user_item_object,用户数据
    */
@@ -50,7 +50,7 @@
   /**
    * @def #global_res
    * - code integer,enums(u_type),提交状态
-   * - data object,返回的数据结构
+   * - data cust,返回的数据结构
    * - message string,错误信息
    *
    * @def #user_list_object

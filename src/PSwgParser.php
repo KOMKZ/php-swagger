@@ -114,7 +114,7 @@ class PSwgParser
 						'default' => '',
 						'enums' => '',
 						'description' => '',
-					];
+ 					];
 					list(
 						$prop['required'],
 						$prop['validator'],
@@ -169,7 +169,8 @@ class PSwgParser
 					'method' => '',
 					'path' => '',
 					'tag' => '',
-					'description' => ''
+					'description' => '',
+					'more' => []
 				];
 				list($body['method'], $body['path'], $body['tag'], $body['description']) = explode(',', $value);
 				return [$body, false];
@@ -316,36 +317,172 @@ class PSwgParser
 			$itemDoc = $item[0];
 			$rootDocs[$itemDoc['name']] = $itemDoc['value'];
 		}
-		static::buildRoot($rootDocs);
+		$rootDoc = static::buildRoot($rootDocs);
+		$defStr = [];
+		foreach($this->docs['defs'] as $defItem){
+			if($result = static::buildDef($defItem)){
+				$defStr[] = $result;
+			}
+		}
 		$i = 0;
 		while(isset($this->docs['apis'][$i]) && ($apiDoc = $this->docs['apis'][$i])){
 			$apiReturn = $this->docs['apis'][$i+1];
-			static::buildOneApi($apiDoc, $apiReturn);
+			$apiDoc = static::buildOneApi($apiDoc, $apiReturn);
+			console($apiDoc);
 			$i += 2;
 		}
+	}
+	static protected $custDefs = [];
+	public static function buildDef($defItem){
+		$def = $defItem[0];
+		$defName = $def['value']['def'];
+		$propStr = [];
+		foreach ($def['value']['more'] as $prop) {
+			if($prop['type'] == 'cust'){
+				// cust类型不用存储，作为模版使用
+				static::$custDefs[$defName] = $defItem;
+				return "";
+			}
+			$propStr[] = static::buildOneProp($prop);
+		}
+
+		$tpl = sprintf("/**\n*  @SWG\Definition(\n*    definition=\"{$defName}\",\n%s\n*  )\n*/",
+		implode(",\n", $propStr)
+		);
+		return $tpl;
 	}
 	public static function buildOneApi($apiDocItem, $apiReturnItem){
 		$apiDoc = $apiDocItem[0];
 		$apiReturn = $apiReturnItem[0];
-		$bodyParams = [];
-		$params = [];
+
+		// 解析参数
+		$paramStr = [];
+		$bodyParamProps = [];
 		foreach($apiDoc['value']['more'] as $param){
-			if($param['path_type'] == 'in_body'){
-				$bodyParams[] = $param;
+			if($param['path_type'] == 'body'){
+				$bodyParamProps[] = $param;
 			}else{
-				$params[] = $param;
+				$paramStr[] = static::buildCommParameter($param);
 			}
 		}
-		foreach($params as $param){
-			static::buildOneParameter($param);
+		if($bodyParamProps){
+			$paramStr[] = static::buildBodyParameter($bodyParamProps);
+		}
+		$paramStr = implode(",\n", $paramStr);
+		// 解析return
+		$defName = $apiReturn['value']['def'];
+		$targetReturnDef = static::$custDefs[$defName];
+		// 合并target
+		foreach($apiReturn['value']['more'] as $prop){
+			foreach($targetReturnDef[0]['value']['more'] as $index => $tProp){
+				if($prop['name'] == $tProp['name']){
+					$targetReturnDef[0]['value']['more'][$index] = array_merge($tProp, $prop);
+				}
+			}
+		}
+		$returnDoc = sprintf("*   	@SWG\Response(\n*   		response=200,\n*   		description=\"\",\n%s\n*   	)",
+					static::buildPropsSchema($targetReturnDef[0]['value']['more']));
+		$tpl = <<<tpl
+/**
+ *  @SWG\%s(
+ *    path="%s",
+ *    tags={"%s"},
+ *    summary="%s",
+ *    produces={"application/json"},%s
+ %s
+ *  )
+ */
+tpl;
+		return sprintf($tpl,
+		ucfirst($apiDoc['value']['method'])
+		,$apiDoc['value']['path']
+		,$apiDoc['value']['tag']
+		,$apiDoc['value']['description']
+		,$paramStr ? "\n{$paramStr}," : ""
+		,$returnDoc
+		);
+
+	}
+
+	public static function buildCommParameter($param){
+		$attrs = [];
+		if($param['required'] == 'required'){
+			$attrs[] = "*         required=true";
+		}else{
+			$attrs[] = "*         required=false";
 		}
 
-		console($apiDoc);
+		if($param['type'] == 'integer'){
+			$attrs[] = "*         type=\"integer\"";
+			$attrs[] = "*         format=\"int32\"";
+		}else{
+			// boolean string
+			$attrs[] = "*          type=\"{$param['type']}\"";;
+		}
 
+
+		if($param['enums'] != 'not_enums'){
+			$enums = static::getEnumsFromStr($param['enums']);
+			$enumStr = implode("\",\"", $enums);
+			$attrs[] = "*          enums={\"{$enumStr}\"}";
+		}
+		$attrs[] = "*         name=\"{$param['name']}\"";
+
+
+		$attrs[] = "*         in=\"{$param['path_type']}\"";
+
+		$attrs[] = "*         description=\"{$param['description']}\"";
+		$tpl = sprintf("*     @SWG\Parameter(\n%s\n*     )", implode(",\n", $attrs));
+		return $tpl;
 	}
-	public static function buildOneParameter($param){
-		console($param);
+	public static function buildBodyParameter($props){
+		$attrs = [];
+		$attrs[] = "*         name=\"body\"";
+		$attrs[] = "*         in=\"body\"";
+		$propStr = [];
+		$requiredPropStr = [];
+		foreach ($props as $prop) {
+			if($prop['required'] == "required"){
+				$requiredPropStr[] = $prop['name'];
+			}
+			$propStr[] = static::buildOneProp($prop);
+		}
+		$requiredPropStr = implode("\",\"", $requiredPropStr);
+		$attrs[] = "*         required={\"{$requiredPropStr}\"}";
+		$attrs[] = sprintf("*    @SWG\Schema(\n%s\n)", implode(",\n", $propStr));
+		$result = sprintf("*     @SWG\Parameter(\n%s\n*     )", implode(",\n", $attrs));
+		return $result;
 	}
+	public static function buildPropsSchema($props){
+		$propStr = [];
+		foreach ($props as $prop) {
+			$propStr[] = static::buildOneProp($prop);
+		}
+		return sprintf("*    @SWG\Schema(\n%s\n)", implode(",\n", $propStr));
+	}
+	public static function buildOneProp($prop){
+		$attrs = [];
+		if($prop['type'] == 'integer'){
+			$attrs[] = "*         type=\"integer\"";
+			$attrs[] = "*         format=\"int32\"";
+		}elseif(preg_match('/(?<type>object|array)#(?<ref>.+)/', $prop['type'], $matches)){
+			if($matches['type'] == 'object'){
+				$attrs[] = "*         type=\"object\"";
+				$attrs[] = "*      ref=\"#/definitions/{$matches['ref']}\"";
+			}else{
+				$attrs[] = "*         type=\"array\"";
+				$attrs[] = "*      @SWG\Items(\n*      type=\"object\",\n*      ref=\"#/definitions/{$matches['ref']}\"\n*    )";
+			}
+		}else{
+			// boolean string
+			$attrs[] = "*          type=\"{$prop['type']}\"";;
+		}
+		$attrs[] = "*         description=\"{$prop['description']}\"";
+		$attrs[] = "*         property=\"{$prop['name']}\"";
+		$tpl = sprintf("*     @SWG\Property(\n%s\n*     )", implode(",\n", $attrs));
+		return $tpl;
+	}
+
 	public static function buildRoot($rootDocs){
 		$root = <<<str
 /**
@@ -367,7 +504,9 @@ class PSwgParser
 str;
 		return $root;
 	}
-
+	public static function getEnumsFromStr($enumStr){
+		return ["a", "b", "d"];
+	}
 	public static function checkIsDocEnd($buffer){
 		return preg_match("/\s*\*\/\s*\n/", $buffer);
 	}

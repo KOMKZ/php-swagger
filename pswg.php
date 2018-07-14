@@ -1,5 +1,5 @@
 <?php
-require('/home/master/pro/php/composer-global-dep/vendor/digitalnature/php-ref/ref.php');
+require('/home/lartik/pro/php/composer-global-dep/vendor/digitalnature/php-ref/ref.php');
 require "vendor/autoload.php";
 
 use pswg\PSwg;
