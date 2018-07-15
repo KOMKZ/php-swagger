@@ -78,6 +78,21 @@ class PSwgParser
 		   ],
 		];
 	}
+	protected static function getSwgCliPath(){
+		return dirname(dirname(__FILE__)) . "/vendor/zircote/swagger-php/bin/swagger";
+	}
+	protected function getContentFromPhpFile(){
+		return file_get_contents($this->getPhpFile());
+	}
+	protected function writeToPhpFile($content){
+		file_put_contents($this->getPhpFile(), $content . "\n\n", FILE_APPEND);
+	}
+	protected function resetPhpFile(){
+		file_put_contents($this->getPhpFile(), "");
+	}
+	protected function getPhpFile(){
+		return sprintf("/tmp/swg-%s.php", date("ymd", time()));
+	}
 	public static function buildErrorString($line, $value){
 		return sprintf("error:%s %s", $line, $value);
 	}
@@ -312,26 +327,37 @@ class PSwgParser
 	}
 
 	public function genePhpSwg(){
+	    $this->resetPhpFile();
 		$rootDocs = [];
 		foreach($this->docs['root'] as $item){
 			$itemDoc = $item[0];
 			$rootDocs[$itemDoc['name']] = $itemDoc['value'];
 		}
-		$rootDoc = static::buildRoot($rootDocs);
-		$defStr = [];
+		$this->writeToPhpFile(static::buildRoot($rootDocs));
+
 		foreach($this->docs['defs'] as $defItem){
 			if($result = static::buildDef($defItem)){
-				$defStr[] = $result;
+				$this->writeToPhpFile($result);
 			}
 		}
+
+
 		$i = 0;
 		while(isset($this->docs['apis'][$i]) && ($apiDoc = $this->docs['apis'][$i])){
 			$apiReturn = $this->docs['apis'][$i+1];
 			$apiDoc = static::buildOneApi($apiDoc, $apiReturn);
-			console($apiDoc);
+			$this->writeToPhpFile($apiDoc);
 			$i += 2;
 		}
 	}
+
+	public function geneJsonSwg(){
+		$swgCli = static::getSwgCliPath();
+		$cmd = sprintf("%s %s --output %s", $swgCli, $this->getPhpFile(), $this->saveFile);
+		echo "{$cmd}\n";
+		system($cmd);
+	}
+
 	static protected $custDefs = [];
 	public static function buildDef($defItem){
 		$def = $defItem[0];

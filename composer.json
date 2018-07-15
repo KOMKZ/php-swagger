@@ -6,7 +6,9 @@
             "email": "m13715194169_1@163.com"
         }
     ],
-    "require": {},
+    "require": {
+        "zircote/swagger-php": "^2.0"
+    },
     "autoload": {
         "psr-4": {
             "pswg\\": "src"
