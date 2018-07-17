@@ -88,7 +88,7 @@ class PSwgParser
 		file_put_contents($this->getPhpFile(), $content . "\n\n", FILE_APPEND);
 	}
 	protected function resetPhpFile(){
-		file_put_contents($this->getPhpFile(), "");
+		file_put_contents($this->getPhpFile(), "<?php\n");
 	}
 	protected function getPhpFile(){
 		return sprintf("/tmp/swg-%s.php", date("ymd", time()));
@@ -115,7 +115,6 @@ class PSwgParser
 					}
 					return [$prop, true];
 				}
-
 
 				// optional,not_validate,integer,in_query,not_def,not_enums,用户id
 				$paramCount = count(explode(',', $matches['value']));
@@ -341,6 +340,12 @@ class PSwgParser
 			}
 		}
 
+		foreach ($this->docs['params'] as $defItem) {
+			if($result = static::buildDef($defItem)){
+				$this->writeToPhpFile($result);
+			}
+		}
+
 
 		$i = 0;
 		while(isset($this->docs['apis'][$i]) && ($apiDoc = $this->docs['apis'][$i])){
@@ -450,7 +455,7 @@ tpl;
 		if($param['enums'] != 'not_enums'){
 			$enums = static::getEnumsFromStr($param['enums']);
 			$enumStr = implode("\",\"", $enums);
-			$attrs[] = "*          enums={\"{$enumStr}\"}";
+			$attrs[] = "*          enum={\"{$enumStr}\"}";
 		}
 		$attrs[] = "*         name=\"{$param['name']}\"";
 
@@ -474,8 +479,10 @@ tpl;
 			$propStr[] = static::buildOneProp($prop);
 		}
 		$requiredPropStr = implode("\",\"", $requiredPropStr);
-		$attrs[] = "*         required={\"{$requiredPropStr}\"}";
-		$attrs[] = sprintf("*    @SWG\Schema(\n%s\n)", implode(",\n", $propStr));
+		$attrs[] = sprintf("*    @SWG\Schema(\n%s,\n%s\n)",
+			"*         required={\"{$requiredPropStr}\"}",
+			implode(",\n", $propStr)
+		);
 		$result = sprintf("*     @SWG\Parameter(\n%s\n*     )", implode(",\n", $attrs));
 		return $result;
 	}

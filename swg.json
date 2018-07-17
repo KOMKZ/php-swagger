@@ -1,0 +1,368 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "User API",
+        "description": "User API",
+        "contact": {
+            "name": "kitral",
+            "url": "http://www.baidu.com"
+        },
+        "license": {
+            "name": "kitral",
+            "url": "http://www.baidu.com"
+        },
+        "version": "0.1.9"
+    },
+    "host": "localhost:8064",
+    "basePath": "",
+    "schemes": [
+        "http"
+    ],
+    "consumes": [
+        "application/json"
+    ],
+    "produces": [
+        "application/json"
+    ],
+    "paths": {
+        "/users": {
+            "get": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "\u83b7\u53d6\u7528\u6237\u5217\u8868\u63a5\u53e3",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "u_id",
+                        "in": "query",
+                        "description": "\u7528\u6237id",
+                        "required": false,
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    {
+                        "name": "u_type",
+                        "in": "query",
+                        "description": "\u7528\u6237\u7c7b\u578b",
+                        "required": false,
+                        "type": "string",
+                        "enum": [
+                            "a",
+                            "b",
+                            "d"
+                        ]
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "properties": {
+                                "code": {
+                                    "description": "\u63d0\u4ea4\u72b6\u6001",
+                                    "type": "integer",
+                                    "format": "int32"
+                                },
+                                "data": {
+                                    "description": "\u8fd4\u56de\u7528\u6237\u5217\u8868",
+                                    "type": "object",
+                                    "$ref": "#/definitions/user_list_object"
+                                },
+                                "message": {
+                                    "description": "\u9519\u8bef\u4fe1\u606f",
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "\u521b\u5efa\u4e00\u4e2a\u7528\u6237",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "required": [
+                                "u_name",
+                                "u_info",
+                                "u_skills"
+                            ],
+                            "properties": {
+                                "u_name": {
+                                    "description": "\u7528\u6237\u6635\u79f0",
+                                    "type": "string"
+                                },
+                                "u_info": {
+                                    "description": "\u7528\u6237\u4fe1\u606f",
+                                    "type": "object",
+                                    "$ref": "#/definitions/u_info_params"
+                                },
+                                "u_skills": {
+                                    "description": "\u7528\u6237\u6280\u80fd\u5217\u8868",
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "$ref": "#/definitions/u_skill_params"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "properties": {
+                                "code": {
+                                    "description": "\u63d0\u4ea4\u72b6\u6001",
+                                    "type": "integer",
+                                    "format": "int32"
+                                },
+                                "data": {
+                                    "description": "\u7528\u6237\u6570\u636e",
+                                    "type": "object",
+                                    "$ref": "#/definitions/user_item_object"
+                                },
+                                "message": {
+                                    "description": "\u9519\u8bef\u4fe1\u606f",
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{id}": {
+            "put": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "\u4fee\u6539\u4e00\u4e2a\u7528\u6237",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "\u7528\u6237id",
+                        "required": true,
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "required": [
+                                "u_name",
+                                "u_info",
+                                "u_skills"
+                            ],
+                            "properties": {
+                                "u_name": {
+                                    "description": "\u7528\u6237\u6635\u79f0",
+                                    "type": "string"
+                                },
+                                "u_info": {
+                                    "description": "\u7528\u6237\u4fe1\u606f",
+                                    "type": "object",
+                                    "$ref": "#/definitions/u_info_params"
+                                },
+                                "u_skills": {
+                                    "description": "\u7528\u6237\u6280\u80fd\u5217\u8868",
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "$ref": "#/definitions/u_skill_params"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "properties": {
+                                "code": {
+                                    "description": "\u63d0\u4ea4\u72b6\u6001",
+                                    "type": "integer",
+                                    "format": "int32"
+                                },
+                                "data": {
+                                    "description": "\u7528\u6237\u6570\u636e",
+                                    "type": "object",
+                                    "$ref": "#/definitions/user_item_object"
+                                },
+                                "message": {
+                                    "description": "\u9519\u8bef\u4fe1\u606f",
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "User"
+                ],
+                "summary": "\u4fee\u6539\u4e00\u4e2a\u7528\u6237",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "\u7528\u6237id",
+                        "required": true,
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "properties": {
+                                "code": {
+                                    "description": "\u63d0\u4ea4\u72b6\u6001",
+                                    "type": "integer",
+                                    "format": "int32"
+                                },
+                                "data": {
+                                    "description": "\u7528\u6237\u6570\u636e",
+                                    "type": "object",
+                                    "$ref": "#/definitions/user_item_object"
+                                },
+                                "message": {
+                                    "description": "\u9519\u8bef\u4fe1\u606f",
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "user_list_object": {
+            "properties": {
+                "total_count": {
+                    "description": "\u603b\u6570\u91cf",
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "items": {
+                    "description": "\u7528\u6237\u5217\u8868",
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#/definitions/user_item_object"
+                    }
+                }
+            }
+        },
+        "user_item_object": {
+            "properties": {
+                "u_id": {
+                    "description": "\u7528\u6237id",
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "u_type": {
+                    "description": "\u7528\u6237\u7c7b\u578b",
+                    "type": "string"
+                },
+                "u_info": {
+                    "description": "\u7528\u6237\u4fe1\u606f\u5bf9\u8c61",
+                    "type": "object",
+                    "$ref": "#/definitions/u_info_object"
+                },
+                "u_skills": {
+                    "description": "\u7528\u6237\u6280\u80fd\u5bf9\u8c61\u5217\u8868",
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#/definitions/u_skill_object"
+                    }
+                }
+            }
+        },
+        "u_info_object": {
+            "properties": {
+                "u_address": {
+                    "description": "\u7528\u6237\u5c45\u4f4f\u5730\u5740",
+                    "type": "string"
+                },
+                "u_phone": {
+                    "description": "\u7528\u6237\u624b\u673a\u53f7\u7801",
+                    "type": "string"
+                }
+            }
+        },
+        "u_skill_object": {
+            "properties": {
+                "u_skill_age": {
+                    "description": "\u6280\u80fd\u65f6\u957f",
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "u_skill_name": {
+                    "description": "\u6280\u80fd\u540d\u9648",
+                    "type": "string"
+                },
+                "u_skill_level": {
+                    "description": "\u6280\u80fd\u7b49\u7ea7",
+                    "type": "integer",
+                    "format": "int32"
+                }
+            }
+        },
+        "u_info_param": {
+            "properties": {
+                "u_address": {
+                    "description": "\u7528\u6237\u5730\u5740",
+                    "type": "string"
+                },
+                "u_phone": {
+                    "description": "\u7528\u6237\u624b\u673a\u53f7\u7801",
+                    "type": "string"
+                }
+            }
+        },
+        "u_skill_param": {
+            "properties": {
+                "u_skill_age": {
+                    "description": "\u7528\u6237\u5730\u5740",
+                    "type": "string"
+                },
+                "u_skill_name": {
+                    "description": "\u7528\u6237\u5730\u5740",
+                    "type": "string"
+                },
+                "u_skill_level": {
+                    "description": "\u7528\u6237\u5730\u5740",
+                    "type": "string"
+                }
+            }
+        }
+    }
+}
