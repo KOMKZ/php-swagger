@@ -24,8 +24,8 @@
 /**
  * @api post,/users,User,创建一个用户
  * - u_name required,validate#u_name/default,string,body,not_def,not_enums,用户昵称
- * - u_info required,not_validate,object#u_info_params,body,not_def,not_enums,用户信息
- * - u_skills required,not_validate,array#u_skill_params,body,not_def,not_enums,用户技能列表
+ * - u_info required,not_validate,object#u_info_param,body,not_def,not_enums,用户信息
+ * - u_skills required,not_validate,array#u_skill_param,body,not_def,not_enums,用户技能列表
  * @return #global_res
  * - data object#user_item_object,用户数据
  */
@@ -34,8 +34,8 @@
   * @api put,/users/{id},User,修改一个用户
   * - id required,not_validate,integer,path,not_def,not_enums,用户id
   * - u_name required,validate#u_name/put,string,body,not_def,not_enums,用户昵称
-  * - u_info required,not_validate,object#u_info_params,body,not_def,not_enums,用户信息
-  * - u_skills required,not_validate,array#u_skill_params,body,not_def,not_enums,用户技能列表
+  * - u_info required,not_validate,object#u_info_param,body,not_def,not_enums,用户信息
+  * - u_skills required,not_validate,array#u_skill_param,body,not_def,not_enums,用户技能列表
   * @return #global_res
   * - data object#user_item_object,用户数据
   */

@@ -3,14 +3,66 @@ namespace pswg;
 
 
 /**
- *
+ * 简化版本的php-swagger书写解析器
  */
 class PSwgParser
 {
+	/**
+	 * 保存的swagger json文件地址
+	 * @var string
+	 */
 	public $saveFile = '';
+
+	/**
+	 * 输入的定义文件地址，即简化的php-swagger写法
+	 * @var string
+	 */
 	public $inputFile = '';
+
+	/**
+	 * 运行模式
+	 * @var string
+	 */
 	public $mode = 'debug';
-	public static function getValidProps(){
+
+	/**
+	 * 解析文档存储数组
+	 * @var array
+	 */
+	protected $docs = [
+		'root' => [],
+		'apis' => [],
+		'defs' => [],
+		'params' => [],
+		'validators' => [],
+	];
+
+	/**
+	 * 文档解析块是否开始
+	 * @var array
+	 */
+	protected $docBegin = false;
+	protected $propBegin = false;
+	protected $propName = '';
+	protected $propValue = ['more' => []];
+	protected $propMoreValue = [];
+	protected $end = true;
+	protected $lineNum = 1;
+	protected $docBlock = [
+		'root' => [],
+		'apis' => [],
+		'defs' => [],
+		'params' => [],
+		'validators' => [],
+	];
+
+	/**
+	 * 获取有效的解析属性
+	 * @return array 返回属性列表
+	 *
+	 * 该返回是一个数组，数组的key是有效的属性名称，值是包含解析属性解析器parser和所属分类的belong的元素
+	 */
+	protected static function getValidProps(){
 		return [
 		   'swagger' => [
 			   'parser' => 'single',
@@ -78,25 +130,61 @@ class PSwgParser
 		   ],
 		];
 	}
+
+	/**
+	 * 计算获取得到php-swagger的命令的执行路径
+	 * @return string 返回命令的执行路径
+	 */
 	protected static function getSwgCliPath(){
 		return dirname(dirname(__FILE__)) . "/vendor/zircote/swagger-php/bin/swagger";
 	}
+
+	/**
+	 * 获取php-swagger.php的文件内容
+	 * @return string 返回文件内容
+	 */
 	protected function getContentFromPhpFile(){
 		return file_get_contents($this->getPhpFile());
 	}
+
+	/**
+	 * 将解析生成的内容写入到php-swagger.php文件中
+	 * @param  string $content 解析得到的内容
+	 */
 	protected function writeToPhpFile($content){
 		file_put_contents($this->getPhpFile(), $content . "\n\n", FILE_APPEND);
 	}
+
+	/**
+	 * 置空php-swagger.php的文件内容
+	 */
 	protected function resetPhpFile(){
 		file_put_contents($this->getPhpFile(), "<?php\n");
 	}
+
+	/**
+	 * 获取php-swagger.php的文件的保存路径
+	 * @return string 返回文件的保存路径
+	 */
 	protected function getPhpFile(){
 		return sprintf("/tmp/swg-%s.php", date("ymd", time()));
 	}
-	public static function buildErrorString($line, $value){
+
+	/**
+	 * 构建错误调试信息
+	 * @param  integer $line 当前解析到的行数
+	 * @param  string $value 当前解析到的内容
+	 * @return string        返回调试信息
+	 */
+	protected static function buildErrorString($line, $value){
 		return sprintf("error:%s %s", $line, $value);
 	}
-	public static function getValueParser(){
+
+	/**
+	 * 获取属性值的解析器列表
+	 * @return array 返回解析器列表
+	 */
+	protected static function getValueParser(){
 		return [
 			'single' => function($value, $line){
 				return [$value, true];
@@ -191,36 +279,27 @@ class PSwgParser
 			},
 		];
 	}
-	public static function getValidPropNames(){
+
+	/**
+	 * 获取解析器支持的属性名称
+	 * @see getValidProps()
+	 * @return array 返回支持的属性名称列表
+	 */
+	protected static function getValidPropNames(){
 		return array_keys(static::getValidProps());
 	}
-	public function debug($value){
+
+	/**
+	 * 调试工具
+	 * @param  string $value 调试信息
+	 */
+	protected function debug($value){
 		if($this->mode == 'debug'){
 			echo $value;
 		}
 	}
 
-	protected $docs = [
-		'root' => [],
-		'apis' => [],
-		'defs' => [],
-		'params' => [],
-		'validators' => [],
-	];
-	protected $docBegin = false;
-	protected $propBegin = false;
-	protected $propName = '';
-	protected $propValue = ['more' => []];
-	protected $propMoreValue = [];
-	protected $end = true;
-	protected $lineNum = 1;
-	protected $docBlock = [
-		'root' => [],
-		'apis' => [],
-		'defs' => [],
-		'params' => [],
-		'validators' => [],
-	];
+
 
 	protected function pushDocProp(){
 		if(!$this->propName){
@@ -368,17 +447,27 @@ class PSwgParser
 		$def = $defItem[0];
 		$defName = $def['value']['def'];
 		$propStr = [];
+		$requiredProps = [];
 		foreach ($def['value']['more'] as $prop) {
 			if($prop['type'] == 'cust'){
 				// cust类型不用存储，作为模版使用
 				static::$custDefs[$defName] = $defItem;
 				return "";
 			}
+			if(isset($prop['required'])){
+				$requiredProps[] = $prop['name'];
+			}
 			$propStr[] = static::buildOneProp($prop);
 		}
+		$attrs = [];
+		$attrs[] = sprintf("*    definition=\"{$defName}\"", $defName);
+		$attrs[] = implode(",\n", $propStr);
+		if($requiredProps){
+			$attrs[] = sprintf("*	required={\"%s\"}", implode("\",\"", $requiredProps));
+		}
 
-		$tpl = sprintf("/**\n*  @SWG\Definition(\n*    definition=\"{$defName}\",\n%s\n*  )\n*/",
-		implode(",\n", $propStr)
+		$tpl = sprintf("/**\n*  @SWG\Definition(\n%s*)\n*/",
+		implode(",\n", $attrs)
 		);
 		return $tpl;
 	}
@@ -411,7 +500,7 @@ class PSwgParser
 				}
 			}
 		}
-		$returnDoc = sprintf("*   	@SWG\Response(\n*   		response=200,\n*   		description=\"\",\n%s\n*   	)",
+		$returnDoc = sprintf("*   	@SWG\Response(\n*   		response=200,\n*   		description=\"\",\n%s\n*)\n",
 					static::buildPropsSchema($targetReturnDef[0]['value']['more']));
 		$tpl = <<<tpl
 /**
@@ -479,7 +568,7 @@ tpl;
 			$propStr[] = static::buildOneProp($prop);
 		}
 		$requiredPropStr = implode("\",\"", $requiredPropStr);
-		$attrs[] = sprintf("*    @SWG\Schema(\n%s,\n%s\n)",
+		$attrs[] = sprintf("*    @SWG\Schema(\n%s,\n%s\n*)",
 			"*         required={\"{$requiredPropStr}\"}",
 			implode(",\n", $propStr)
 		);
@@ -491,7 +580,7 @@ tpl;
 		foreach ($props as $prop) {
 			$propStr[] = static::buildOneProp($prop);
 		}
-		return sprintf("*    @SWG\Schema(\n%s\n)", implode(",\n", $propStr));
+		return sprintf("*    @SWG\Schema(\n%s\n*)", implode(",\n", $propStr));
 	}
 	public static function buildOneProp($prop){
 		$attrs = [];

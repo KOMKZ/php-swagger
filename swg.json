@@ -106,14 +106,14 @@
                                 "u_info": {
                                     "description": "\u7528\u6237\u4fe1\u606f",
                                     "type": "object",
-                                    "$ref": "#/definitions/u_info_params"
+                                    "$ref": "#/definitions/u_info_param"
                                 },
                                 "u_skills": {
                                     "description": "\u7528\u6237\u6280\u80fd\u5217\u8868",
                                     "type": "array",
                                     "items": {
                                         "type": "object",
-                                        "$ref": "#/definitions/u_skill_params"
+                                        "$ref": "#/definitions/u_skill_param"
                                     }
                                 }
                             }
@@ -180,14 +180,14 @@
                                 "u_info": {
                                     "description": "\u7528\u6237\u4fe1\u606f",
                                     "type": "object",
-                                    "$ref": "#/definitions/u_info_params"
+                                    "$ref": "#/definitions/u_info_param"
                                 },
                                 "u_skills": {
                                     "description": "\u7528\u6237\u6280\u80fd\u5217\u8868",
                                     "type": "array",
                                     "items": {
                                         "type": "object",
-                                        "$ref": "#/definitions/u_skill_params"
+                                        "$ref": "#/definitions/u_skill_param"
                                     }
                                 }
                             }
