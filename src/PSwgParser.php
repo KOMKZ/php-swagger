@@ -300,7 +300,9 @@ class PSwgParser
 	}
 
 
-
+	/**
+	 * 保存属性的解析结果
+	 */
 	protected function pushDocProp(){
 		if(!$this->propName){
 			return 0;
@@ -317,6 +319,10 @@ class PSwgParser
 		], $this->lineNum];
 		$this->debug(sprintf("完成解析1@%s\n\n", $this->propName));
 	}
+
+	/**
+	 * 置空属性解析容器
+	 */
 	protected function resetDocProp(){
 		$this->propBegin = false;
 		$this->propName = "";
@@ -324,15 +330,22 @@ class PSwgParser
 		$this->end = true;
 		$this->propMoreValue = [];
 	}
+
+	/**
+	 * 保存一个文档解析结果
+	 */
 	protected function pushDocBlock(){
 		foreach($this->docBlock as $type => $items){
 			foreach($items as $item){
 				$this->docs[$type][] = $item;
 			}
 		}
-
 		$this->debug("推入一个doc\n\n");
 	}
+
+	/**
+	 * 置空一个文档解析容器
+	 */
 	protected function resetDocBlock(){
 		// 置空
 		$this->docBlock = [
@@ -344,6 +357,10 @@ class PSwgParser
 		];
 		$this->docBegin = false;
 	}
+
+	/**
+	 * 开始解析文本
+	 */
 	public function parse(){
 		$handle = @fopen($this->inputFile, "r");
 		if ($handle) {
@@ -404,6 +421,9 @@ class PSwgParser
 		}
 	}
 
+	/**
+	 * 将解析内容保存到php-swagger.php文件中
+	 */
 	public function genePhpSwg(){
 	    $this->resetPhpFile();
 		$rootDocs = [];
@@ -435,6 +455,9 @@ class PSwgParser
 		}
 	}
 
+	/**
+	 * 执行命令保存swagger.json文件
+	 */
 	public function geneJsonSwg(){
 		$swgCli = static::getSwgCliPath();
 		$cmd = sprintf("%s %s --output %s", $swgCli, $this->getPhpFile(), $this->saveFile);
@@ -442,8 +465,19 @@ class PSwgParser
 		system($cmd);
 	}
 
+	/**
+	 * 定义模板，不做实际定义用
+	 * @var array
+	 */
 	static protected $custDefs = [];
-	public static function buildDef($defItem){
+
+	/**
+	 * 将定义的内容转成php-swagger的定义
+	 * @see getValueParser() 参考该方法了解def解析返回的内容
+	 * @param  array $defItem 简写的定义内容
+	 * @return string         返回php-swagger定义
+	 */
+	protected static function buildDef($defItem){
 		$def = $defItem[0];
 		$defName = $def['value']['def'];
 		$propStr = [];
@@ -471,7 +505,14 @@ class PSwgParser
 		);
 		return $tpl;
 	}
-	public static function buildOneApi($apiDocItem, $apiReturnItem){
+
+	/**
+	 * 将api的内容转成php-swagger的api
+	 * @param  array $apiDocItem  api定义信息
+	 * @param  array $apiReturnItem api的return定义信息
+	 * @return string 返回php-swagger的api定义内容
+	 */
+	protected static function buildOneApi($apiDocItem, $apiReturnItem){
 		$apiDoc = $apiDocItem[0];
 		$apiReturn = $apiReturnItem[0];
 
@@ -524,6 +565,12 @@ tpl;
 
 	}
 
+	/**
+	 * 将常规参数转成php-swagger的参数定义
+	 * @see getValueParser() 了解参数的结构
+	 * @param  array $param 参数
+	 * @return string        返回php-swagger参数定义
+	 */
 	public static function buildCommParameter($param){
 		$attrs = [];
 		if($param['required'] == 'required'){
@@ -555,6 +602,14 @@ tpl;
 		$tpl = sprintf("*     @SWG\Parameter(\n%s\n*     )", implode(",\n", $attrs));
 		return $tpl;
 	}
+
+
+	/**
+	 * 将body参数转成php-swagger的参数定义
+	 * @see getValueParser() 了解参数的结构
+	 * @param  array $param 参数
+	 * @return string        返回php-swagger参数定义
+	 */
 	public static function buildBodyParameter($props){
 		$attrs = [];
 		$attrs[] = "*         name=\"body\"";
@@ -575,6 +630,13 @@ tpl;
 		$result = sprintf("*     @SWG\Parameter(\n%s\n*     )", implode(",\n", $attrs));
 		return $result;
 	}
+
+	/**
+	 * 构建属性组合实体
+	 * @see getValueParser() 了解属性的结构
+	 * @param  array $props 参数
+	 * @return string        返回php-swagger属性定义
+	 */
 	public static function buildPropsSchema($props){
 		$propStr = [];
 		foreach ($props as $prop) {
@@ -582,6 +644,12 @@ tpl;
 		}
 		return sprintf("*    @SWG\Schema(\n%s\n*)", implode(",\n", $propStr));
 	}
+
+	/**
+	 * 将属性定义装成php-swagger的属性定义
+	 * @param  array $prop 属性定义
+	 * @return string      返回php-swagger属性定义
+	 */
 	public static function buildOneProp($prop){
 		$attrs = [];
 		if($prop['type'] == 'integer'){
@@ -605,6 +673,11 @@ tpl;
 		return $tpl;
 	}
 
+	/**
+	 * 将根定义转为php-swagger定义
+	 * @param  array $rootDocs 根定义信息
+	 * @return string          返回php-swagger根定义信息
+	 */
 	public static function buildRoot($rootDocs){
 		$root = <<<str
 /**
@@ -626,15 +699,37 @@ tpl;
 str;
 		return $root;
 	}
+	/**
+	 * 获取枚举值数组
+	 * @param  string $enumStr 枚举值的名称
+	 * @return array          枚举值列表
+	 */
 	public static function getEnumsFromStr($enumStr){
 		return ["a", "b", "d"];
 	}
+	/**
+	 * 检查解析行是否是doc的结束
+	 * @param  string $buffer 解析的一行内容
+	 * @return boolean 当以*\/结束是返回true
+	 */
 	public static function checkIsDocEnd($buffer){
 		return preg_match("/\s*\*\/\s*\n/", $buffer);
 	}
+
+	/**
+	 * 检查解析行是否是doc
+	 * @param  string $buffer 解析的一行内容
+	 * @return boolean 当以\/**开始是返回true
+	 */
 	public static function checkIsDocBegin($buffer){
 		return preg_match("/^\s*\/\*\*\s*\n/", $buffer);
 	}
+
+	/**
+	 * 检查是否是doc内容
+	 * @param  string $buffer 解析的一行内容
+	 * @return boolean 满足条件时为true
+	 */
 	public static function checkIsDoc($buffer){
 		return preg_match("/@(?<name>[a-zA-Z\-\_]+)\s+(?<value>.*)/", $buffer) ||
 			   preg_match("/\*\s+\-\s+(?<name>[a-zA-Z\-\_]+)\s+(?<value>.+)[\s\n]*/", $buffer) ||
