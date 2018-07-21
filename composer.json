@@ -1,5 +1,8 @@
 {
-    "name": "root/php-swagger",
+    "name": "lartik/php-swagger",
+    "description": "php-swagger简化写法解析器",
+    "keywords": ["yii2", "swagger", "php-swagger", "api", "documentation"],
+    "minimum-stability": "dev",
     "authors": [
         {
             "name": "kz",
@@ -9,6 +12,7 @@
     "require": {
         "zircote/swagger-php": "^2.0"
     },
+    "bin": ["pswg"],
     "autoload": {
         "psr-4": {
             "pswg\\": "src"
