@@ -136,7 +136,7 @@ class PSwgParser
 	 * @return string 返回命令的执行路径
 	 */
 	protected static function getSwgCliPath(){
-		return dirname(dirname(__FILE__)) . "/vendor/zircote/swagger-php/bin/swagger";
+		return dirname(dirname(__DIR__)) . "/vendor/zircote/swagger-php/bin/swagger";
 	}
 
 	/**
