@@ -1,8 +1,6 @@
 #!/usr/bin/env php
 <?php
-// require('/home/lartik/pro/php/composer-global-dep/vendor/digitalnature/php-ref/ref.php');
-require('/home/master/pro/php/composer-global-dep/vendor/digitalnature/php-ref/ref.php');
-require dirname(__DIR__) . "/autoload.php";
+require dirname(dirname(__DIR__)) . "/autoload.php";
 
 use pswg\PSwg;
 use pswg\PSwgParser;
