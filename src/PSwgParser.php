@@ -26,6 +26,12 @@ class PSwgParser
 	public $mode = 'debug';
 
 	/**
+	 * 美剧值定义文件
+	 * @var string
+	 */
+	public $enumsFile = "";
+
+	/**
 	 * 解析文档存储数组
 	 * @var array
 	 */
@@ -136,7 +142,7 @@ class PSwgParser
 	 * @return string 返回命令的执行路径
 	 */
 	protected static function getSwgCliPath(){
-		return dirname(dirname(__DIR__)) . "/vendor/zircote/swagger-php/bin/swagger";
+		return dirname(dirname(__FILE__)) . "/vendor/zircote/swagger-php/bin/swagger";
 	}
 
 	/**
@@ -667,7 +673,12 @@ tpl;
 			// boolean string
 			$attrs[] = "*          type=\"{$prop['type']}\"";;
 		}
-		$attrs[] = "*         description=\"{$prop['description']}\"";
+		if(!empty($prop['enums']) && 'not_enums' != $prop['enums']){
+			$enumsDes = static::getEnumsDesFromStr($prop['enums']);
+		}else{
+			$enumsDes = '';
+		}
+		$attrs[] = "*         description=\"{$prop['description']} {$enumsDes}\"";
 		$attrs[] = "*         property=\"{$prop['name']}\"";
 		$tpl = sprintf("*     @SWG\Property(\n%s\n*     )", implode(",\n", $attrs));
 		return $tpl;
@@ -699,14 +710,64 @@ tpl;
 str;
 		return $root;
 	}
+
+
 	/**
 	 * 获取枚举值数组
 	 * @param  string $enumStr 枚举值的名称
 	 * @return array          枚举值列表
 	 */
-	public static function getEnumsFromStr($enumStr){
-		return ["a", "b", "d"];
+	public static function getEnumsFromStr($enumStr, $line = 0){
+		if(preg_match('/enums\((?<name>[a-zA-Z0-9\-\_]+)\)/', $enumStr, $matches)){
+			return static::$enumsValue[$matches['name']];
+		}else{
+			throw new \Exception(static::buildErrorString($line, $enumStr));
+		}
 	}
+
+	public static function getEnumsDesFromStr($enumStr, $line = 0){
+		if(preg_match('/enums\((?<name>[a-zA-Z0-9\-\_]+)\)/', $enumStr, $matches)){
+			return static::$enums[$matches['name']];
+		}else{
+			console($enumStr, 1);
+			throw new \Exception(static::buildErrorString($line, $enumStr));
+		}
+	}
+
+
+	static protected $enums = [];
+	static protected $enumsValue = [];
+
+	public static function buildEnumsFromFile($file){
+		if(file_exists($file)){
+			if(!static::$enums){
+				$data = spyc_load_file($file);
+				$result = [];
+				foreach($data as $item){
+					$enums = [];
+					foreach($item['items'] as $value){
+						$def = explode('|', $value);
+						$def['value'] = $def[0];
+						$def['name'] = $def[1];
+						$def['des'] = isset($def[2]) ? $def[2] : "";
+						$def['symbol'] = isset($def[3]) ? $def[3] : "";
+						$def['isdefault'] = isset($def[4]) ? $def[4] : "";
+						$value = $def;
+						static::$enumsValue[$item['field']][] = $value['value'];
+						$enums[] = sprintf("%s:%s", $value['value'], $value['name']);
+					}
+					$result[$item['field']] = implode('|', $enums);
+				}
+				static::$enums = $result;
+			}
+			return static::$enums;
+		}else{
+			return [];
+		}
+	}
+
+
+
 	/**
 	 * 检查解析行是否是doc的结束
 	 * @param  string $buffer 解析的一行内容

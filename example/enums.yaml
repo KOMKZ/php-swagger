@@ -1,0 +1,6 @@
+-
+    name: 用户类型
+    field: u_type
+    items:
+        - root|超级用户
+        - admin|管理员用户
