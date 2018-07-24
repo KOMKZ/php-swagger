@@ -3,6 +3,7 @@
     "description": "php-swagger简化写法解析器",
     "keywords": ["yii2", "swagger", "php-swagger", "api", "documentation"],
     "minimum-stability": "dev",
+    "prefer-stable" : true,
     "authors": [
         {
             "name": "kz",
