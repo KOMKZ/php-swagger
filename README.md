@@ -11,7 +11,7 @@ PHP >= 5.3.2
     ...
     "require": {
         ...
-        "lartik/swagger-php": "@dev"
+        "lartik/php-swagger": "@dev"
     }
 }
 ```
